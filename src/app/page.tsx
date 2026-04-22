@@ -44,6 +44,10 @@ export default async function Home(props: {
 
   const { data: rooms } = await roomsQuery;
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
       <section className="mb-12 text-center">
@@ -62,12 +66,14 @@ export default async function Home(props: {
           >
             ルームを作成
           </Link>
-          <Link
-            href="/signup"
-            className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
-          >
-            アカウント作成
-          </Link>
+          {!user && (
+            <Link
+              href="/signup"
+              className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            >
+              アカウント作成
+            </Link>
+          )}
         </div>
       </section>
 
