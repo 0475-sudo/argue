@@ -10,7 +10,7 @@ export default async function ProfilePage(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, created_at")
+    .select("id, username, avatar_url, created_at")
     .eq("id", id)
     .single();
 
@@ -25,9 +25,7 @@ export default async function ProfilePage(
     .order("created_at", { ascending: false })
     .limit(20);
 
-  const initial = (profile.display_name || profile.username || "?")
-    .charAt(0)
-    .toUpperCase();
+  const initial = (profile.username || "?").charAt(0).toUpperCase();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
@@ -37,9 +35,8 @@ export default async function ProfilePage(
         </div>
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            {profile.display_name || profile.username}
+            {profile.username}
           </h1>
-          <p className="text-sm text-zinc-500">@{profile.username}</p>
           <p className="mt-1 text-xs text-zinc-400">
             {new Date(profile.created_at).toLocaleDateString("ja-JP")}
             に参加

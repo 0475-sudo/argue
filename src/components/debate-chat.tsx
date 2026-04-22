@@ -16,7 +16,7 @@ export type Argument = {
   created_at: string;
   user_id: string | null;
   vote_count: number;
-  profiles: { username: string; display_name: string | null } | null;
+  profiles: { username: string } | null;
 };
 
 export type AiModeration = {
@@ -146,7 +146,7 @@ export default function DebateChat({
           if (newArg.user_id) {
             const { data: profile } = await supabase
               .from("profiles")
-              .select("username, display_name")
+              .select("username")
               .eq("id", newArg.user_id)
               .single();
             newArg.profiles = profile;
@@ -583,10 +583,7 @@ function ChatBubble({
   onJumpToArgument: (argumentId: string) => void;
 }) {
   const isFor = argument.stance === "for";
-  const displayName =
-    argument.profiles?.display_name ||
-    argument.profiles?.username ||
-    "匿名ユーザー";
+  const displayName = argument.profiles?.username || "匿名ユーザー";
   const time = new Date(argument.created_at).toLocaleString("ja-JP", {
     month: "short",
     day: "numeric",

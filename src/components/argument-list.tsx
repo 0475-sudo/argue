@@ -5,7 +5,7 @@ type Argument = {
   evidence_url: string;
   evidence_description: string | null;
   created_at: string;
-  profiles: { username: string; display_name: string | null } | null;
+  profiles: { username: string } | null;
 };
 
 export default function ArgumentList({
@@ -81,10 +81,7 @@ function ArgumentCard({
     ? "text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-100"
     : "text-red-700 hover:text-red-900 dark:text-red-300 dark:hover:text-red-100";
 
-  const displayName =
-    argument.profiles?.display_name ||
-    argument.profiles?.username ||
-    "匿名ユーザー";
+  const displayName = argument.profiles?.username || "匿名ユーザー";
   const time = new Date(argument.created_at).toLocaleString("ja-JP", {
     month: "short",
     day: "numeric",

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { fetchOgTitle } from "@/lib/og";
 import { normalizeUrl } from "@/lib/normalize-url";
+import { ensureProfile } from "@/lib/ensure-profile";
 
 export type CreateRoomState = {
   error?: string;
@@ -47,22 +48,10 @@ export async function createRoom(
     return { error: "ルームを作成するにはログインが必要です" };
   }
 
-  // --- profileが未作成なら自動作成 ---
-  const { data: existingProfile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", user.id)
-    .single();
-
-  if (!existingProfile) {
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: user.id,
-      username: user.email?.split("@")[0] ?? user.id.slice(0, 8),
-      display_name: user.email?.split("@")[0] ?? "ユーザー",
-    });
-    if (profileError) {
-      return { error: "プロフィールの作成に失敗しました: " + profileError.message };
-    }
+  // --- profileが未作成なら自動作成 (サインアップ時の username を優先) ---
+  const ensureResult = await ensureProfile(supabase, user);
+  if (ensureResult.error) {
+    return { error: "プロフィールの作成に失敗しました: " + ensureResult.error };
   }
 
   const normalizedUrl = normalizeUrl(sourceUrl);

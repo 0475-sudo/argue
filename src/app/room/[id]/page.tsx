@@ -22,7 +22,7 @@ export default async function RoomPage(props: PageProps<"/room/[id]">) {
 
   const { data: args } = await supabase
     .from("arguments")
-    .select("*, profiles(username, display_name)")
+    .select("*, profiles(username)")
     .eq("room_id", id)
     .order("created_at", { ascending: true });
 

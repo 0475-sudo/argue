@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { ensureProfile } from "@/lib/ensure-profile";
 
 export type AuthState = {
   error?: string;
@@ -14,39 +14,6 @@ function getSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return `http://localhost:${process.env.PORT || 3000}`;
-}
-
-async function ensureProfile(supabase: SupabaseClient, user: User): Promise<void> {
-  const { data: existing } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (existing) return;
-
-  const metadata = user.user_metadata as
-    | { username?: string; display_name?: string }
-    | null;
-  const baseUsername =
-    metadata?.username?.trim() ||
-    user.email?.split("@")[0] ||
-    user.id.slice(0, 8);
-  const displayName = metadata?.display_name?.trim() || baseUsername;
-
-  const { error } = await supabase.from("profiles").insert({
-    id: user.id,
-    username: baseUsername,
-    display_name: displayName,
-  });
-
-  // unique_violation on username → append id suffix and retry
-  if (error && error.code === "23505") {
-    await supabase.from("profiles").insert({
-      id: user.id,
-      username: `${baseUsername}_${user.id.slice(0, 6)}`,
-      display_name: displayName,
-    });
-  }
 }
 
 export async function login(
@@ -108,7 +75,6 @@ export async function signup(
     options: {
       data: {
         username: username.trim(),
-        display_name: username.trim(),
       },
       emailRedirectTo: `${getSiteUrl()}/auth/callback`,
     },

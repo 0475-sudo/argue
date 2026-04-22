@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { ensureProfile } from "@/lib/ensure-profile";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -26,36 +27,7 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (!existing) {
-      const metadata = user.user_metadata as
-        | { username?: string; display_name?: string }
-        | null;
-      const baseUsername =
-        metadata?.username?.trim() ||
-        user.email?.split("@")[0] ||
-        user.id.slice(0, 8);
-      const displayName = metadata?.display_name?.trim() || baseUsername;
-
-      const { error: insertError } = await supabase.from("profiles").insert({
-        id: user.id,
-        username: baseUsername,
-        display_name: displayName,
-      });
-
-      if (insertError && insertError.code === "23505") {
-        await supabase.from("profiles").insert({
-          id: user.id,
-          username: `${baseUsername}_${user.id.slice(0, 6)}`,
-          display_name: displayName,
-        });
-      }
-    }
+    await ensureProfile(supabase, user);
   }
 
   return NextResponse.redirect(`${origin}${next}`);
